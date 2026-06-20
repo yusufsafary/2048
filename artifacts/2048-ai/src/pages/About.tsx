@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Brain, Gamepad2, Github, Zap, RotateCcw } from 'lucide-react';
+import { Bot, Brain, Gamepad2, Zap, RotateCcw } from 'lucide-react';
 
 const features = [
   {
@@ -81,21 +81,13 @@ export default function About() {
           className="bg-card border rounded-xl p-6 shadow-sm"
         >
           <h2 className="font-bold text-lg mb-2 flex items-center gap-2">
-            <Github size={18} /> Open Source
+            <Bot size={18} /> How the AI Works
           </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            This project is open source. The AI uses Expectimax search with a heuristic
-            that weighs empty cells, tile monotonicity, and merge potential to choose
-            the best move at every step.
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The AI uses Expectimax search with a heuristic that weighs empty cells,
+            tile monotonicity, and merge potential to choose the best move at every step.
+            It runs entirely in your browser — no server needed.
           </p>
-          <a
-            href="https://github.com/yusufsafary/2048"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-          >
-            <Github size={15} /> github.com/yusufsafary/2048
-          </a>
         </motion.div>
       </motion.div>
     </div>
