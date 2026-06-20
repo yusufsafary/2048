@@ -1,3 +1,19 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="tileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f9b233;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f67c22;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fff;stop-opacity:0.15" />
+      <stop offset="50%" style="stop-color:#fff;stop-opacity:0.35" />
+      <stop offset="100%" style="stop-color:#fff;stop-opacity:0.05" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#c45e00" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="12" ry="12" fill="url(#tileGrad)" filter="url(#shadow)"/>
+  <rect x="4" y="4" width="56" height="28" rx="12" ry="12" fill="url(#shimmer)"/>
+  <text x="32" y="43" font-family="Arial Black, Arial, sans-serif" font-size="18" font-weight="900" text-anchor="middle" fill="white" letter-spacing="-1">2048</text>
 </svg>

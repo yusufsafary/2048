@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
-import { Play, Bot, Lightbulb, Undo2, Trophy, ArrowRight, Keyboard, Smartphone } from 'lucide-react';
+import { Play, Bot, Lightbulb, Undo2, Trophy, ArrowRight, Keyboard, Smartphone, Medal, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLeaderboard } from '@/hooks/use-leaderboard';
 
 const TILE_COLORS: Record<number, { bg: string; text: string }> = {
   2:    { bg: 'bg-[#eee4da]', text: 'text-[#776e65]' },
@@ -17,13 +18,6 @@ const TILE_COLORS: Record<number, { bg: string; text: string }> = {
   1024: { bg: 'bg-[#edc53f]', text: 'text-white' },
   2048: { bg: 'bg-[#edc22e]', text: 'text-white' },
 };
-
-const DEMO_BOARD = [
-  [512, 256, 64, 8],
-  [128, 32, 16, 4],
-  [64,  16,  8, 2],
-  [32,   8,  4, 0],
-];
 
 const DEMO_BOARDS: number[][][] = [
   [
@@ -47,14 +41,11 @@ const DEMO_BOARDS: number[][][] = [
 ];
 
 function Tile({ value }: { value: number }) {
-  if (!value) return (
-    <div className="w-full aspect-square rounded-lg bg-[#cdc1b4]/40" />
-  );
+  if (!value) return <div className="w-full aspect-square rounded-lg bg-[#cdc1b4]/40" />;
   const col = TILE_COLORS[value] ?? { bg: 'bg-[#3c3a32]', text: 'text-white' };
   const fontSize = value >= 1024 ? 'text-lg font-black' : value >= 128 ? 'text-xl font-black' : 'text-2xl font-black';
   return (
     <motion.div
-      key={value}
       initial={{ scale: 0.85, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       className={`w-full aspect-square rounded-lg flex items-center justify-center ${col.bg} ${col.text} ${fontSize} tracking-tighter shadow-sm`}
@@ -67,44 +58,28 @@ function Tile({ value }: { value: number }) {
 function MiniBoard({ board }: { board: number[][] }) {
   return (
     <div className="bg-[#bbada0] p-2 rounded-xl grid grid-cols-4 gap-1.5 w-48 shadow-lg">
-      {board.flat().map((v, i) => (
-        <Tile key={i} value={v} />
-      ))}
+      {board.flat().map((v, i) => <Tile key={i} value={v} />)}
     </div>
   );
 }
 
+const RANK_COLORS = ['text-yellow-500', 'text-slate-400', 'text-amber-600'];
+const RANK_BG = ['bg-yellow-500/10 border-yellow-500/20', 'bg-slate-400/10 border-slate-400/20', 'bg-amber-600/10 border-amber-600/20'];
+
+function RankIcon({ rank }: { rank: number }) {
+  if (rank === 0) return <Medal size={16} className="text-yellow-500" />;
+  if (rank === 1) return <Medal size={16} className="text-slate-400" />;
+  if (rank === 2) return <Medal size={16} className="text-amber-600" />;
+  return <span className="text-xs font-bold text-muted-foreground w-4 text-center">{rank + 1}</span>;
+}
+
 const features = [
-  {
-    icon: <Keyboard size={20} />,
-    title: 'Arrow Keys / Swipe',
-    desc: 'Control with keyboard arrows on desktop or swipe gestures on mobile.',
-  },
-  {
-    icon: <Bot size={20} />,
-    title: 'AI Auto-Play',
-    desc: 'Let the Expectimax AI take over and watch it reach 2048 (and beyond).',
-  },
-  {
-    icon: <Lightbulb size={20} />,
-    title: 'Move Hints',
-    desc: 'Enable Suggest mode — AI highlights the best move before you commit.',
-  },
-  {
-    icon: <Undo2 size={20} />,
-    title: 'Undo Moves',
-    desc: 'Changed your mind? Undo up to 3 moves and try a different strategy.',
-  },
-  {
-    icon: <Trophy size={20} />,
-    title: 'Best Score',
-    desc: 'Your highest score is saved locally and tracked across sessions.',
-  },
-  {
-    icon: <Smartphone size={20} />,
-    title: 'Mobile Ready',
-    desc: 'Fully responsive — plays great on any screen size, touch-first.',
-  },
+  { icon: <Keyboard size={20} />, title: 'Arrow Keys / Swipe', desc: 'Desktop arrows or mobile swipe — fully responsive.' },
+  { icon: <Bot size={20} />, title: 'AI Auto-Play', desc: 'Let the Expectimax AI take over and reach 2048 automatically.' },
+  { icon: <Lightbulb size={20} />, title: 'Move Hints', desc: 'Suggest mode highlights the optimal move before you commit.' },
+  { icon: <Undo2 size={20} />, title: 'Undo Moves', desc: 'Undo up to 3 moves and try a different path.' },
+  { icon: <Trophy size={20} />, title: 'Leaderboard', desc: 'Beat a high score? Your name goes on the board.' },
+  { icon: <Smartphone size={20} />, title: 'Mobile Ready', desc: 'Touch-first design that plays great on any screen.' },
 ];
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
@@ -112,11 +87,10 @@ const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transiti
 
 export default function Demo() {
   const [boardIdx, setBoardIdx] = useState(0);
+  const { entries } = useLeaderboard();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBoardIdx(i => (i + 1) % DEMO_BOARDS.length);
-    }, 2000);
+    const interval = setInterval(() => setBoardIdx(i => (i + 1) % DEMO_BOARDS.length), 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -124,12 +98,7 @@ export default function Demo() {
     <div className="min-h-[calc(100dvh-56px)] bg-background">
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background px-4 py-20 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-2xl mx-auto"
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-2xl mx-auto">
           <span className="inline-block bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-6">
             Human Demo
           </span>
@@ -141,90 +110,38 @@ export default function Demo() {
             suggest your next move, or step through the game one turn at a time.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <Link href="/">
-              <Button size="lg" className="gap-2 text-base px-8">
-                <Play size={18} /> Play Now
-              </Button>
-            </Link>
-            <Link href="/how-to-play">
-              <Button size="lg" variant="outline" className="gap-2 text-base px-8">
-                How to Play <ArrowRight size={16} />
-              </Button>
-            </Link>
+            <Link href="/"><Button size="lg" className="gap-2 text-base px-8"><Play size={18} /> Play Now</Button></Link>
+            <Link href="/how-to-play"><Button size="lg" variant="outline" className="gap-2 text-base px-8">How to Play <ArrowRight size={16} /></Button></Link>
           </div>
         </motion.div>
 
-        {/* Floating boards decoration */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="flex justify-center gap-6 mt-14 flex-wrap"
-        >
-          <div className="opacity-40 rotate-[-8deg] translate-y-4 hidden sm:block">
-            <MiniBoard board={DEMO_BOARDS[0]} />
-          </div>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="flex justify-center gap-6 mt-14 flex-wrap">
+          <div className="opacity-40 rotate-[-8deg] translate-y-4 hidden sm:block"><MiniBoard board={DEMO_BOARDS[0]} /></div>
           <div className="shadow-2xl">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={boardIdx}
-                initial={{ opacity: 0, scale: 0.92, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.92, y: -10 }}
-                transition={{ duration: 0.4 }}
-              >
+              <motion.div key={boardIdx} initial={{ opacity: 0, scale: 0.92, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: -10 }} transition={{ duration: 0.4 }}>
                 <MiniBoard board={DEMO_BOARDS[boardIdx]} />
               </motion.div>
             </AnimatePresence>
           </div>
-          <div className="opacity-40 rotate-[8deg] translate-y-4 hidden sm:block">
-            <MiniBoard board={DEMO_BOARDS[2]} />
-          </div>
+          <div className="opacity-40 rotate-[8deg] translate-y-4 hidden sm:block"><MiniBoard board={DEMO_BOARDS[2]} /></div>
         </motion.div>
       </section>
 
-      {/* How it works - visual walkthrough */}
+      {/* How it works */}
       <section className="px-4 py-16 max-w-3xl mx-auto">
-        <motion.div
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: '-80px' }}
-        >
+        <motion.div variants={container} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
           <motion.div variants={item} className="text-center mb-12">
             <h2 className="text-3xl font-black tracking-tighter mb-2">How it works</h2>
             <p className="text-muted-foreground">Three ways to play — your choice.</p>
           </motion.div>
-
           <div className="grid sm:grid-cols-3 gap-6">
             {[
-              {
-                num: '01',
-                title: 'Play manually',
-                desc: 'Use arrow keys or swipe. Pure strategy, no training wheels.',
-                color: 'border-primary/30 bg-primary/5',
-                numColor: 'text-primary/20',
-              },
-              {
-                num: '02',
-                title: 'Get suggestions',
-                desc: 'Enable Suggest — the AI shows you the best move. You decide.',
-                color: 'border-amber-500/30 bg-amber-500/5',
-                numColor: 'text-amber-400/40',
-              },
-              {
-                num: '03',
-                title: 'Watch the AI',
-                desc: 'Hit Auto-Play and watch the Expectimax AI solve it in real time.',
-                color: 'border-green-500/30 bg-green-500/5',
-                numColor: 'text-green-400/40',
-              },
+              { num: '01', title: 'Play manually', desc: 'Arrow keys or swipe. Pure strategy, no training wheels.', color: 'border-primary/30 bg-primary/5', numColor: 'text-primary/20' },
+              { num: '02', title: 'Get suggestions', desc: 'Enable Suggest — the AI shows the best move. You decide.', color: 'border-amber-500/30 bg-amber-500/5', numColor: 'text-amber-400/40' },
+              { num: '03', title: 'Watch the AI', desc: 'Hit Auto-Play and watch the Expectimax AI solve it live.', color: 'border-green-500/30 bg-green-500/5', numColor: 'text-green-400/40' },
             ].map(card => (
-              <motion.div
-                key={card.num}
-                variants={item}
-                className={`border rounded-2xl p-6 ${card.color}`}
-              >
+              <motion.div key={card.num} variants={item} className={`border rounded-2xl p-6 ${card.color}`}>
                 <span className={`text-5xl font-black tracking-tighter ${card.numColor}`}>{card.num}</span>
                 <h3 className="font-bold text-lg mt-2 mb-1">{card.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{card.desc}</p>
@@ -234,30 +151,73 @@ export default function Demo() {
         </motion.div>
       </section>
 
-      {/* Feature grid */}
+      {/* Leaderboard */}
       <section className="px-4 py-16 bg-muted/30 border-y">
         <div className="max-w-3xl mx-auto">
-          <motion.div
-            variants={container}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-60px' }}
-          >
+          <motion.div variants={container} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }}>
             <motion.div variants={item} className="text-center mb-10">
-              <h2 className="text-3xl font-black tracking-tighter mb-2">Everything you need</h2>
-              <p className="text-muted-foreground">Built for both casual players and puzzle enthusiasts.</p>
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+                <Trophy size={15} /> Leaderboard
+              </div>
+              <h2 className="text-3xl font-black tracking-tighter mb-2">Top Scores</h2>
+              <p className="text-muted-foreground text-sm">Beat a high score in-game to add your name here.</p>
             </motion.div>
 
+            <motion.div variants={item} className="bg-card border rounded-2xl overflow-hidden shadow-sm">
+              {/* Top 3 podium */}
+              <div className="grid grid-cols-3 gap-0 border-b">
+                {entries.slice(0, 3).map((e, i) => (
+                  <div key={i} className={`flex flex-col items-center justify-end p-4 ${i === 0 ? 'bg-yellow-500/5 border-r border-b-0' : i === 1 ? 'bg-slate-400/5 border-r' : 'bg-amber-600/5'} ${i === 1 ? 'pt-6' : i === 0 ? 'pt-4' : 'pt-8'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-black mb-2 ${i === 0 ? 'bg-yellow-500/20 text-yellow-600' : i === 1 ? 'bg-slate-400/20 text-slate-500' : 'bg-amber-600/20 text-amber-700'}`}>
+                      {['🥇','🥈','🥉'][i]}
+                    </div>
+                    <span className="font-bold text-sm text-center truncate w-full text-center">{e.name}</span>
+                    <span className={`text-lg font-black tracking-tighter ${RANK_COLORS[i]}`}>{e.score.toLocaleString()}</span>
+                    {e.isLocal && <span className="text-[10px] text-primary font-bold mt-0.5">YOU</span>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Rest of leaderboard */}
+              <div className="divide-y">
+                {entries.slice(3, 15).map((e, i) => (
+                  <motion.div
+                    key={i + 3}
+                    variants={item}
+                    className={`flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors ${e.isLocal ? 'bg-primary/5' : ''}`}
+                  >
+                    <div className="w-6 flex items-center justify-center shrink-0">
+                      <RankIcon rank={i + 3} />
+                    </div>
+                    <span className="flex-1 font-medium text-sm truncate">{e.name}</span>
+                    {e.isLocal && (
+                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">YOU</span>
+                    )}
+                    <span className="font-bold text-sm tabular-nums">{e.score.toLocaleString()}</span>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="px-5 py-4 bg-muted/20 border-t text-center">
+                <Link href="/"><Button size="sm" className="gap-2"><Star size={13} /> Beat the top score</Button></Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Feature grid */}
+      <section className="px-4 py-16">
+        <div className="max-w-3xl mx-auto">
+          <motion.div variants={container} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }}>
+            <motion.div variants={item} className="text-center mb-10">
+              <h2 className="text-3xl font-black tracking-tighter mb-2">Everything you need</h2>
+              <p className="text-muted-foreground">Built for casual players and puzzle enthusiasts alike.</p>
+            </motion.div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {features.map(f => (
-                <motion.div
-                  key={f.title}
-                  variants={item}
-                  className="bg-card border rounded-xl p-5 hover:shadow-md transition-shadow"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3">
-                    {f.icon}
-                  </div>
+                <motion.div key={f.title} variants={item} className="bg-card border rounded-xl p-5 hover:shadow-md transition-shadow">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3">{f.icon}</div>
                   <h3 className="font-bold text-sm mb-1">{f.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
                 </motion.div>
@@ -267,53 +227,31 @@ export default function Demo() {
         </div>
       </section>
 
-      {/* Score showcase */}
-      <section className="px-4 py-16 max-w-3xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="bg-card border rounded-2xl p-8 text-center shadow-sm"
-        >
-          <p className="text-muted-foreground text-sm uppercase tracking-widest font-semibold mb-2">Tile value showcase</p>
+      {/* Tile showcase */}
+      <section className="px-4 py-12 max-w-3xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card border rounded-2xl p-8 text-center shadow-sm">
+          <p className="text-muted-foreground text-sm uppercase tracking-widest font-semibold mb-2">Tile progression</p>
           <div className="flex flex-wrap gap-2 justify-center my-6">
             {[2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048].map(v => {
               const col = TILE_COLORS[v];
               return (
-                <motion.div
-                  key={v}
-                  whileHover={{ scale: 1.12, rotate: [-2, 2, 0] }}
-                  transition={{ duration: 0.2 }}
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center font-black text-sm shadow-sm cursor-default ${col.bg} ${col.text}`}
-                >
+                <motion.div key={v} whileHover={{ scale: 1.12, rotate: [-2, 2, 0] }} transition={{ duration: 0.2 }} className={`w-12 h-12 rounded-lg flex items-center justify-center font-black shadow-sm cursor-default ${col.bg} ${col.text}`}>
                   {v >= 1000 ? <span className="text-xs">{v}</span> : v}
                 </motion.div>
               );
             })}
           </div>
-          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-            Combine tiles to climb from <strong>2</strong> to <strong>2048</strong> — then keep going for maximum score.
-          </p>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto">Merge from <strong>2</strong> all the way to <strong>2048</strong> — then push further for maximum score.</p>
         </motion.div>
       </section>
 
       {/* CTA */}
       <section className="px-4 py-20 bg-primary text-primary-foreground text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-4xl font-black tracking-tighter mb-3">Ready to play?</h2>
-          <p className="text-primary-foreground/70 mb-8 max-w-sm mx-auto">
-            Jump straight in — no account needed. Your best score is saved automatically.
-          </p>
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <h2 className="text-4xl font-black tracking-tighter mb-3">Ready to climb the board?</h2>
+          <p className="text-primary-foreground/70 mb-8 max-w-sm mx-auto">No account needed. Play instantly and save your score.</p>
           <Link href="/">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="gap-2 text-base px-10 font-bold"
-            >
+            <Button size="lg" variant="secondary" className="gap-2 text-base px-10 font-bold">
               <Play size={18} /> Start Playing
             </Button>
           </Link>
