@@ -31,7 +31,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build
-        run: PORT=3000 BASE_PATH=/2048/ NODE_ENV=production pnpm --filter @workspace/2048-ai run build
+        run: PORT=3000 BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/2048-ai run build
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
